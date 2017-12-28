@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="js/web3.min.js"></script>
+    <script>
+      web3 = new Web3(new Web3.providers.HttpProvider(
+              "https://mainnet.infura.io/"));
+
+      var acct = location.search.split('acct=')[1];
+      var balanceWei = web3.eth.getBalance(acct).toNumber();
+      var balance = web3.fromWei(balanceWei, 'ether');
+    </script>
+  </head>
+
+  <body>
+    <h2>Get Account Balance</h2>
+    <form method=GET>
+      Account address:<br/><br/>
+      <input type="text" size="40" name="acct"/><br/><br/>
+      <input type="submit"/>
+    </form>
+    <p>Account: 
+      <script>
+        if (acct === undefined || acct == null) {
+        } else {
+          document.write(acct)
+        }
+      </script>
+    </p>
+    <p>Balance: 
+      <script>
+        if (balance === undefined || balance == null) {
+        } else {
+          document.write(balance)
+        }
+      </script>
+    </p>
+  </body>
+</html>
