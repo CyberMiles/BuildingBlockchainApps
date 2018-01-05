@@ -6,6 +6,7 @@ import (
   "strings"
   "bytes"
   "strconv"
+  "github.com/tendermint/abci/example/code"
   "github.com/tendermint/abci/server"
   "github.com/tendermint/abci/types"
   cmn "github.com/tendermint/tmlibs/common"
@@ -28,7 +29,7 @@ func main() {
     os.Exit(1)
   }
   srv.SetLogger(logger.With("module", "abci-server"))
-  if _, err := srv.Start(); err != nil {
+  if err := srv.Start(); err != nil {
     logger.Error(err.Error())
     os.Exit(1)
   }
@@ -53,22 +54,22 @@ func NewFactsApplication() *FactsApplication {
   return &FactsApplication{db: db, cache: cache}
 }
 
-func (app *FactsApplication) CheckTx (tx []byte) types.Result {
+func (app *FactsApplication) CheckTx (tx []byte) types.ResponseCheckTx {
   parts := strings.Split(string(tx), ":")
   source := strings.TrimSpace(parts[0])
   statement := strings.TrimSpace(parts[1])
   if (len(source) == 0) || (len(statement) == 0) {
-    return types.NewError(types.CodeType_UnknownRequest, "Empty Input")
+    return types.ResponseCheckTx{Code:code.CodeTypeEncodingError, Log:"Empty Input"}
   }
-  return types.OK
+  return types.ResponseCheckTx{Code: code.CodeTypeOK}
 }
 
-func (app *FactsApplication) DeliverTx (tx []byte) types.Result {
+func (app *FactsApplication) DeliverTx (tx []byte) types.ResponseDeliverTx {
   parts := strings.Split(string(tx), ":")
   source := strings.TrimSpace(parts[0])
   statement := strings.TrimSpace(parts[1])
   if (len(source) == 0) || (len(statement) == 0) {
-    return types.NewError(types.CodeType_UnknownRequest, "Empty Input")
+    return types.ResponseDeliverTx{Code:code.CodeTypeEncodingError, Log:"Empty Input"}
   }
 
   if val, ok := app.cache[source]; ok {
@@ -76,10 +77,10 @@ func (app *FactsApplication) DeliverTx (tx []byte) types.Result {
   } else {
     app.cache[source] = 1
   }
-  return types.OK
+  return types.ResponseDeliverTx{Code: code.CodeTypeOK}
 }
 
-func (app *FactsApplication) Commit() types.Result {
+func (app *FactsApplication) Commit() types.ResponseCommit {
   for source, v := range app.cache {
     if val, ok := app.db[source]; ok {
       app.db[source] = val + v
@@ -88,7 +89,7 @@ func (app *FactsApplication) Commit() types.Result {
     }
   }
   app.cache = make(map[string]int)
-  return types.OK
+  return types.ResponseCommit{Code: code.CodeTypeOK}
 }
 
 func (app *FactsApplication) Query (reqQuery types.RequestQuery) (resQuery types.ResponseQuery) {
